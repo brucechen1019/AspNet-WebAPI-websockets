@@ -1,0 +1,66 @@
+﻿
+@{
+    ViewBag.Title = "Chat";
+}
+
+<h2>Chat Room</h2>
+
+<form id="chatform" action="">
+
+    <table>
+        <tr><td colspan="2"><label id="curUser"></label></td></tr>
+        <tr>
+            <td>ReceiverName:</td>
+            <td><input id="receiverName" /></td>
+        </tr>
+        <tr>
+            <td>Message:</td>
+            <td><input id="inputbox" /></td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align:right;">
+                <input type="button" value="Send" id="btnSend" />
+            </td>
+        </tr>
+    </table>
+
+</form>
+<div id="messages" />
+
+@section scripts{
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            var username;
+            do {
+                username = prompt('Please enter a username:');
+            } while (username == undefined || username.length==0);
+            
+            $("#curUser").text("Current User: " + username);
+
+            var uri = 'ws://' + window.location.hostname + ":"+window.location.port + '/api/chat?username=' + username;
+            websocket = new WebSocket(uri);
+
+            websocket.onopen = function () {
+                $('#messages').prepend('<div>Connected.</div>');
+
+                $('#btnSend').click(function () {
+                    websocket.send(JSON.stringify({
+                        "msg": $('#inputbox').val(),
+                        "receiver": $('#receiverName').val()
+                    }));
+                    $('#inputbox').val('');
+                });
+            };
+
+            websocket.onerror = function (event) {
+                $('#messages').prepend('<div>ERROR</div>');
+            };
+
+            websocket.onmessage = function (event) {
+                $('#messages').prepend('<div>' + event.data + '</div>');
+            };
+        });
+    </script>
+}
+
